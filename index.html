@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fetch Data</title>
+    <title>Fetch Data with Dark Theme & Particles</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <style>
@@ -26,6 +26,13 @@
             left: 0;
             z-index: -1; /* Make particles stay behind the content */
         }
+        pre {
+            white-space: pre-wrap; /* Allow line breaks */
+            word-wrap: break-word; /* Prevent long words from overflowing */
+        }
+        .toggle-label {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="relative min-h-screen flex items-center justify-center">
@@ -34,7 +41,7 @@
     <div id="particles-js"></div>
 
     <div class="max-w-4xl mx-auto p-8 glass-dark rounded-lg shadow-lg text-white z-10">
-        <h1 class="text-4xl font-bold mb-6 text-center text-slate-200">Fetch API : AxelMardiyo</h1>
+        <h1 class="text-4xl font-bold mb-6 text-center text-slate-200">Fetch API Data & Pagination</h1>
 
         <!-- Input for URL -->
         <div class="mb-6">
@@ -49,10 +56,30 @@
             </button>
         </div>
 
-        <!-- Section to display table -->
+        <!-- Section to display view options -->
+        <div id="toggleViewSection" class="hidden text-center mb-4">
+            <input type="checkbox" id="viewToggle" class="hidden" onchange="toggleView()">
+            <label for="viewToggle" class="toggle-label inline-flex items-center cursor-pointer">
+                <span class="mr-2 text-slate-300">JSON View</span>
+                <span class="relative">
+                    <span class="block w-10 h-6 bg-slate-600 rounded-full"></span>
+                    <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform" id="toggleCircle"></span>
+                </span>
+                <span class="ml-2 text-slate-300">Table View</span>
+            </label>
+        </div>
+
+        <!-- Section to display result -->
         <div id="resultSection" class="mt-6 hidden">
             <h2 class="text-2xl font-semibold mb-4 text-slate-200">Fetched Data:</h2>
-            <div class="overflow-x-auto">
+            
+            <!-- JSON View Section -->
+            <div id="jsonView" class="hidden bg-slate-800 p-4 rounded-md mb-4">
+                <pre id="jsonOutput" class="text-slate-300"></pre>
+            </div>
+
+            <!-- Table View Section -->
+            <div id="tableView" class="hidden overflow-x-auto">
                 <table class="min-w-full bg-slate-800 rounded-lg text-white">
                     <thead>
                         <tr class="bg-slate-700 text-left">
@@ -80,7 +107,8 @@
         let currentPage = 1;
         const rowsPerPage = 5;
         let data = [];
-
+        
+        // Function to fetch data
         function fetchData() {
             const url = document.getElementById('urlInput').value;
             fetch(url)
@@ -89,13 +117,17 @@
                     data = fetchedData;  // Store fetched data
                     currentPage = 1;  // Reset to first page
                     displayTable();  // Display table with fetched data
+                    displayJSON();    // Display JSON with fetched data
                     document.getElementById('resultSection').classList.remove('hidden');  // Show result section
+                    document.getElementById('toggleViewSection').classList.remove('hidden'); // Show toggle section
+                    toggleView(); // Set default view to JSON
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
                 });
         }
 
+        // Function to display table view
         function displayTable() {
             const tableBody = document.getElementById('tableBody');
             tableBody.innerHTML = '';  // Clear existing rows
@@ -122,6 +154,31 @@
             document.getElementById('nextPage').disabled = end >= data.length;
         }
 
+        // Function to display JSON view
+        function displayJSON() {
+            const jsonOutput = document.getElementById('jsonOutput');
+            jsonOutput.textContent = JSON.stringify(data, null, 2); // Format JSON for display
+        }
+
+        // Function to toggle between views
+        function toggleView() {
+            const tableView = document.getElementById('tableView');
+            const jsonView = document.getElementById('jsonView');
+            const viewToggle = document.getElementById('viewToggle');
+            const toggleCircle = document.getElementById('toggleCircle');
+
+            if (viewToggle.checked) {
+                tableView.classList.remove('hidden');
+                jsonView.classList.add('hidden');
+                toggleCircle.style.transform = "translateX(100%)"; // Move toggle circle
+            } else {
+                tableView.classList.add('hidden');
+                jsonView.classList.remove('hidden');
+                toggleCircle.style.transform = "translateX(0)"; // Reset toggle circle
+            }
+        }
+
+        // Function to change pagination page
         function changePage(direction) {
             currentPage += direction;  // Change the current page number
             displayTable();  // Refresh the table display
@@ -148,6 +205,11 @@
                     },
                     "polygon": {
                         "nb_sides": 5
+                    },
+                    "image": {
+                        "src": "img/github.svg",
+                        "width": 100,
+                        "height": 100
                     }
                 },
                 "opacity": {
@@ -161,7 +223,7 @@
                     }
                 },
                 "size": {
-                    "value": 3,
+                    "value": 5,
                     "random": true,
                     "anim": {
                         "enable": false,
@@ -184,7 +246,6 @@
                     "random": false,
                     "straight": false,
                     "out_mode": "out",
-                    "bounce": false,
                     "attract": {
                         "enable": false,
                         "rotateX": 600,
